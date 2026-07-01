@@ -21,14 +21,40 @@ function normalize(str = '') {
 }
 
 function detectArea(task, method) {
+  const name = normalize(task.name || '');
+  const desc = normalize(task.description || '');
+
   const checks = {
     name: () => {
-      const name = normalize(task.name || '');
-      return AREAS.find(a =>
+      // Prefijo estándar: [CRM], CRM -, CRM:
+      const byPrefix = AREAS.find(a =>
         name.startsWith(`[${normalize(a)}]`) ||
         name.startsWith(normalize(a) + ' -') ||
         name.startsWith(normalize(a) + ':')
       );
+      if (byPrefix) return byPrefix;
+
+      // Patrón real: "País - Área / SubTipo - Descripción"
+      // Captura lo que hay entre el primer " - " y el " / " o segundo " - "
+      const dashSlash = task.name?.match(/^[^-]+-\s*([^/\-]+)/);
+      if (dashSlash) {
+        const segment = normalize(dashSlash[1]);
+        const bySegment = AREAS.find(a => segment.includes(normalize(a)));
+        if (bySegment) return bySegment;
+      }
+
+      // Busca el nombre del área en cualquier parte del título
+      return AREAS.find(a => name.includes(normalize(a)));
+    },
+    description: () => {
+      // Patrón: "CONTROL INTERNO (Diseño)" en la descripción
+      const match = desc.match(/CONTROL INTERNO\s*\(([^)]+)\)/);
+      if (match) {
+        const areaInDesc = normalize(match[1]);
+        return AREAS.find(a => areaInDesc.includes(normalize(a)));
+      }
+      // También busca el nombre del área suelta en la descripción
+      return AREAS.find(a => desc.includes(normalize(a)));
     },
     tag: () => {
       const tags = (task.tags || []).map(t => normalize(t.name));
@@ -44,7 +70,8 @@ function detectArea(task, method) {
     },
   };
 
-  const methods = [method, 'name', 'tag', 'list', 'space'].filter(Boolean);
+  // Orden de prioridad: método configurado → name → description → tag → list → space
+  const methods = [method, 'name', 'description', 'tag', 'list', 'space'].filter(Boolean);
   for (const m of [...new Set(methods)]) {
     const found = checks[m]?.();
     if (found) return found;
