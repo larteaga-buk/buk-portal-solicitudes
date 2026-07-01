@@ -90,6 +90,26 @@ function findCustomField(task, ...patterns) {
   return null;
 }
 
+// Extrae el link de Entregable_Final desde el texto de la descripción
+// Formato esperado: "• Entregable_Final: https://..." o "• Entregable_Final: [texto](url)"
+function findEntregableFromDescription(description) {
+  if (!description) return null;
+
+  const lines = description.split('\n');
+  for (const line of lines) {
+    if (/entregable_final/i.test(line)) {
+      // URL directa: https://...
+      const urlMatch = line.match(/https?:\/\/[^\s\])"']+/);
+      if (urlMatch) return urlMatch[0];
+
+      // Markdown: [texto](url)
+      const mdMatch = line.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+      if (mdMatch) return mdMatch[2];
+    }
+  }
+  return null;
+}
+
 async function clickup(path, token) {
   const res = await fetch(`${CLICKUP_BASE}${path}`, {
     headers: { Authorization: token, 'Content-Type': 'application/json' },
@@ -187,8 +207,9 @@ export default async function handler(req, res) {
     for (const task of matching) {
       const area = detectArea(task, AREA_METHOD);
       const entregableLink =
+        findEntregableFromDescription(task.description) ||
         findCustomField(task, 'entregable', 'link', 'url', 'deliverable', 'entrega') ||
-        task.url;
+        null;
 
       grouped[area].push({
         id: task.id,
