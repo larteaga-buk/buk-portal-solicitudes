@@ -4,10 +4,10 @@ import TaskTable from './TaskTable'
 const AREAS = ['CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT']
 
 const AREA_META = {
-  CRM:        { emoji: '🤝', color: '#5b2dce', bg: '#ede8fb' },
-  'DISEÑO':   { emoji: '🎨', color: '#d6552a', bg: '#fff0ea' },
-  AUDIOVISUAL:{ emoji: '🎬', color: '#1a7fc1', bg: '#e8f4fd' },
-  FRONT:      { emoji: '💻', color: '#1d8a5e', bg: '#e8f8f2' },
+  CRM:        { emoji: '🤝', color: '#E91E8C', bg: '#fde8f4' },
+  'DISEÑO':   { emoji: '🎨', color: '#2F4DAA', bg: '#D9E3FC' },
+  AUDIOVISUAL:{ emoji: '🎬', color: '#b8830e', bg: '#FEF8E6' },
+  FRONT:      { emoji: '💻', color: '#27ae60', bg: '#e8f8f0' },
 }
 
 function fmtDate(ts) {
@@ -30,7 +30,7 @@ export default function Dashboard({ session, onLogout }) {
           <div style={s.brand}>
             <div style={s.logoIcon}>
               <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-                <rect width="32" height="32" rx="10" fill="#5b2dce"/>
+                <rect width="32" height="32" rx="10" fill="#2F4DAA"/>
                 <path d="M8 8h8a6 6 0 010 12H8V8z" fill="white" opacity=".9"/>
                 <path d="M8 14h10a4 4 0 010 8H8v-8z" fill="white"/>
               </svg>
@@ -132,7 +132,7 @@ export default function Dashboard({ session, onLogout }) {
 }
 
 const s = {
-  root: { minHeight: '100vh', background: '#f5f4fb' },
+  root: { minHeight: '100vh', background: '#EEF2FB' },
 
   header: {
     background: '#fff',
@@ -152,18 +152,18 @@ const s = {
   },
   brand: { display: 'flex', alignItems: 'center', gap: '12px' },
   logoIcon: { lineHeight: 0 },
-  brandName: { fontSize: '15px', fontWeight: 700, color: '#1a1a2e' },
+  brandName: { fontSize: '15px', fontWeight: 700, color: '#2B3B6A' },
   brandSub: { fontSize: '11px', color: '#9ba3b5', marginTop: '1px' },
 
   userBox: { display: 'flex', alignItems: 'center', gap: '10px' },
   avatar: {
     width: '34px', height: '34px', borderRadius: '50%',
-    background: '#5b2dce', color: '#fff',
+    background: '#2F4DAA', color: '#fff',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: '14px', fontWeight: 700, flexShrink: 0,
   },
   userInfo: { lineHeight: 1.3 },
-  userName: { fontSize: '13px', fontWeight: 600, color: '#1a1a2e' },
+  userName: { fontSize: '13px', fontWeight: 600, color: '#2B3B6A' },
   userEmail: { fontSize: '11px', color: '#9ba3b5' },
   logoutBtn: {
     background: 'none', border: 'none', cursor: 'pointer',
