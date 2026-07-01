@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-const ALLOWED_DOMAINS = (import.meta.env.VITE_ALLOWED_DOMAINS || 'buk.com,buk.la')
-  .split(',').map(d => d.trim().toLowerCase())
+// Acepta cualquier dominio @buk.* — la validación real ocurre en el servidor
+const isBukEmail = (domain) => domain?.toLowerCase().startsWith('buk.')
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('')
@@ -9,7 +9,7 @@ export default function LoginPage({ onLogin }) {
   const [error, setError] = useState('')
 
   const domain = email.split('@')[1]?.toLowerCase()
-  const validDomain = domain && ALLOWED_DOMAINS.includes(domain)
+  const validDomain = isBukEmail(domain)
 
   async function handleSubmit(e) {
     e.preventDefault()
