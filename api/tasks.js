@@ -1,29 +1,34 @@
 /**
  * Vercel Serverless Function: /api/tasks?email=usuario@buk.com
- * Fetches ClickUp tasks assigned to the given @buk email and groups them by area.
  *
- * Env vars required (set in Vercel dashboard):
- *   CLICKUP_API_TOKEN    – ClickUp personal API token
- *   CLICKUP_TEAM_ID      – ClickUp workspace/team ID
- *   ALLOWED_EMAIL_DOMAINS – comma-separated, e.g. "buk.com,buk.la"
- *   AREA_DETECTION       – "tag" | "list" | "space" | "name"
+ * Los solicitantes NO son usuarios de ClickUp.
+ * Su correo aparece dentro de la descripción de cada tarea.
+ * Esta función busca todas las tareas que contienen el email en su descripción.
+ *
+ * Env vars (Vercel → Settings → Environment Variables):
+ *   CLICKUP_API_TOKEN      – token personal de ClickUp (pk_...)
+ *   CLICKUP_TEAM_ID        – ID del workspace (número en la URL de ClickUp)
+ *   ALLOWED_EMAIL_DOMAINS  – dominios separados por coma: buk.com.br,buk.co,buk.mx,buk.cl,buk.pe
+ *   AREA_DETECTION         – cómo detectar el área: "name" | "tag" | "list" | "space"
  */
 
 const CLICKUP_BASE = 'https://api.clickup.com/api/v2';
-
 const AREAS = ['CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT'];
 
-// Normalize accents for comparison
 function normalize(str = '') {
-  return str
-    .toUpperCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
+  return str.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-// Detect area from a ClickUp task object
 function detectArea(task, method) {
   const checks = {
+    name: () => {
+      const name = normalize(task.name || '');
+      return AREAS.find(a =>
+        name.startsWith(`[${normalize(a)}]`) ||
+        name.startsWith(normalize(a) + ' -') ||
+        name.startsWith(normalize(a) + ':')
+      );
+    },
     tag: () => {
       const tags = (task.tags || []).map(t => normalize(t.name));
       return AREAS.find(a => tags.includes(normalize(a)));
@@ -36,14 +41,9 @@ function detectArea(task, method) {
       const spaceName = normalize(task.space?.name || '');
       return AREAS.find(a => spaceName.includes(normalize(a)));
     },
-    name: () => {
-      const name = normalize(task.name || '');
-      return AREAS.find(a => name.startsWith(`[${normalize(a)}]`) || name.startsWith(normalize(a) + ' -'));
-    },
   };
 
-  // Try configured method first, then fall back through all methods
-  const methods = [method, 'tag', 'list', 'space', 'name'].filter(Boolean);
+  const methods = [method, 'name', 'tag', 'list', 'space'].filter(Boolean);
   for (const m of [...new Set(methods)]) {
     const found = checks[m]?.();
     if (found) return found;
@@ -51,7 +51,6 @@ function detectArea(task, method) {
   return 'OTRO';
 }
 
-// Find a custom field value by name pattern
 function findCustomField(task, ...patterns) {
   const fields = task.custom_fields || [];
   for (const field of fields) {
@@ -75,17 +74,15 @@ async function clickup(path, token) {
 }
 
 export default async function handler(req, res) {
-  // CORS – allow the Vercel frontend origin
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { email } = req.query;
 
-  // 1. Validate email domain
+  // 1. Validar dominio del correo
   const allowedDomains = (process.env.ALLOWED_EMAIL_DOMAINS || 'buk.com,buk.la')
-    .split(',')
-    .map(d => d.trim().toLowerCase());
+    .split(',').map(d => d.trim().toLowerCase());
 
   const domain = email?.split('@')[1]?.toLowerCase();
   if (!email || !domain || !allowedDomains.includes(domain)) {
@@ -94,65 +91,41 @@ export default async function handler(req, res) {
 
   const TOKEN = process.env.CLICKUP_API_TOKEN;
   const TEAM_ID = process.env.CLICKUP_TEAM_ID;
-  const AREA_METHOD = process.env.AREA_DETECTION || 'tag';
+  const AREA_METHOD = process.env.AREA_DETECTION || 'name';
 
   if (!TOKEN || !TEAM_ID) {
     return res.status(500).json({ error: 'Configuración del servidor incompleta.' });
   }
 
   try {
-    // 2. Get workspaces → find user by email
-    // GET /api/v2/team returns all workspaces with their members array
-    const teamsData = await clickup(`/team`, TOKEN);
-    const teams = teamsData.teams || [];
+    // 2. Buscar tareas que contengan el email en su descripción
+    // ClickUp universal search devuelve tareas cuyo contenido coincide con el query
+    const searchParams = new URLSearchParams({
+      query: email,
+      include_closed: 'true',
+    });
 
-    // Find the matching workspace and the user within it
-    let userId = null;
-    let userName = null;
+    const searchData = await clickup(
+      `/team/${TEAM_ID}/search?${searchParams}`,
+      TOKEN
+    );
 
-    for (const team of teams) {
-      if (String(team.id) !== String(TEAM_ID)) continue;
-      const match = (team.members || []).find(
-        m => m.user?.email?.toLowerCase() === email.toLowerCase()
-      );
-      if (match) {
-        userId = match.user.id;
-        userName = match.user.username || match.user.email;
-        break;
-      }
-    }
+    let allTasks = searchData.tasks || [];
 
-    if (!userId) {
+    // Filtro extra: solo tareas donde el email aparece realmente en la descripción o título
+    const emailLower = email.toLowerCase();
+    allTasks = allTasks.filter(t =>
+      (t.description || '').toLowerCase().includes(emailLower) ||
+      (t.name || '').toLowerCase().includes(emailLower)
+    );
+
+    if (allTasks.length === 0) {
       return res.status(404).json({
-        error: 'No se encontró ningún usuario con ese correo en ClickUp.',
+        error: 'No encontramos tareas asociadas a este correo. Verifica que el email esté exactamente como lo escribiste en el formulario.',
       });
     }
 
-    // 3. Fetch tasks assigned to this user (paginate if needed)
-    let allTasks = [];
-    let page = 0;
-    let hasMore = true;
-
-    while (hasMore) {
-      const params = new URLSearchParams({
-        assignees: userId,
-        include_closed: 'true',
-        subtasks: 'true',
-        include_markdown_description: 'false',
-        page: String(page),
-      });
-
-      const data = await clickup(`/team/${TEAM_ID}/task?${params}`, TOKEN);
-      const tasks = data.tasks || [];
-      allTasks = allTasks.concat(tasks);
-
-      // ClickUp returns max 100 tasks per page; stop when fewer than 100 received
-      hasMore = tasks.length === 100;
-      page++;
-      if (page > 9) break; // safety limit: 1000 tasks
-    }
-
-    // 4. Process and group tasks
+    // 3. Agrupar por área
     const grouped = Object.fromEntries(AREAS.map(a => [a, []]));
     grouped['OTRO'] = [];
 
@@ -177,7 +150,11 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.json({ user: { id: userId, name: userName, email }, tasks: grouped });
+    return res.json({
+      user: { name: email.split('@')[0], email },
+      tasks: grouped,
+    });
+
   } catch (err) {
     console.error('[/api/tasks]', err);
     return res.status(500).json({ error: err.message || 'Error al obtener tareas.' });
