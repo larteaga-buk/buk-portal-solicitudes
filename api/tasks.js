@@ -2,12 +2,13 @@
  * Vercel Serverless Function: /api/tasks?email=usuario@buk.com
  *
  * Los solicitantes NO son usuarios de ClickUp.
- * Su correo aparece dentro de la descripción de cada tarea.
- * Esta función busca todas las tareas que contienen el email en su descripción.
+ * Su correo aparece dentro de la descripción de cada tarea en una lista específica.
+ * Esta función trae todas las tareas de la lista y filtra por email en descripción.
  *
  * Env vars (Vercel → Settings → Environment Variables):
  *   CLICKUP_API_TOKEN      – token personal de ClickUp (pk_...)
- *   CLICKUP_TEAM_ID        – ID del workspace (número en la URL de ClickUp)
+ *   CLICKUP_LIST_ID        – ID de la lista donde están las solicitudes
+ *                            (URL de ClickUp: app.clickup.com/.../v/li/ESTE_NÚMERO)
  *   ALLOWED_EMAIL_DOMAINS  – dominios separados por coma: buk.com.br,buk.co,buk.mx,buk.cl,buk.pe
  *   AREA_DETECTION         – cómo detectar el área: "name" | "tag" | "list" | "space"
  */
@@ -90,46 +91,53 @@ export default async function handler(req, res) {
   }
 
   const TOKEN = process.env.CLICKUP_API_TOKEN;
-  const TEAM_ID = process.env.CLICKUP_TEAM_ID;
+  const LIST_ID = process.env.CLICKUP_LIST_ID;
   const AREA_METHOD = process.env.AREA_DETECTION || 'name';
 
-  if (!TOKEN || !TEAM_ID) {
-    return res.status(500).json({ error: 'Configuración del servidor incompleta.' });
+  if (!TOKEN || !LIST_ID) {
+    return res.status(500).json({ error: 'Configuración del servidor incompleta (falta CLICKUP_LIST_ID).' });
   }
 
   try {
-    // 2. Buscar tareas que contengan el email en su descripción
-    // ClickUp universal search devuelve tareas cuyo contenido coincide con el query
-    const searchParams = new URLSearchParams({
-      query: email,
-      include_closed: 'true',
-    });
+    // 2. Traer todas las tareas de la lista (paginado)
+    let allTasks = [];
+    let page = 0;
+    let hasMore = true;
 
-    const searchData = await clickup(
-      `/team/${TEAM_ID}/search?${searchParams}`,
-      TOKEN
-    );
+    while (hasMore) {
+      const params = new URLSearchParams({
+        include_closed: 'true',
+        subtasks: 'true',
+        page: String(page),
+      });
 
-    let allTasks = searchData.tasks || [];
+      const data = await clickup(`/list/${LIST_ID}/task?${params}`, TOKEN);
+      const tasks = data.tasks || [];
+      allTasks = allTasks.concat(tasks);
 
-    // Filtro extra: solo tareas donde el email aparece realmente en la descripción o título
+      hasMore = tasks.length === 100;
+      page++;
+      if (page > 19) break; // límite de seguridad: 2000 tareas
+    }
+
+    // 3. Filtrar por email en descripción o título
     const emailLower = email.toLowerCase();
-    allTasks = allTasks.filter(t =>
+    const matching = allTasks.filter(t =>
       (t.description || '').toLowerCase().includes(emailLower) ||
       (t.name || '').toLowerCase().includes(emailLower)
     );
 
-    if (allTasks.length === 0) {
+    if (matching.length === 0) {
       return res.status(404).json({
-        error: 'No encontramos tareas asociadas a este correo. Verifica que el email esté exactamente como lo escribiste en el formulario.',
+        error: 'No encontramos solicitudes con ese correo. Verifica que el email sea exactamente igual al que usaste en el formulario.',
       });
     }
 
-    // 3. Agrupar por área
+    // 4. Agrupar por área
     const grouped = Object.fromEntries(AREAS.map(a => [a, []]));
     grouped['OTRO'] = [];
 
-    for (const task of allTasks) {
+    for (const task of matching) {
       const area = detectArea(task, AREA_METHOD);
       const entregableLink =
         findCustomField(task, 'entregable', 'link', 'url', 'deliverable', 'entrega') ||
