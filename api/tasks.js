@@ -120,16 +120,36 @@ export default async function handler(req, res) {
       if (page > 19) break; // límite de seguridad: 2000 tareas
     }
 
-    // 3. Filtrar por email en descripción o título
+    // 3. Filtrar por email — busca en descripción, nombre, campos personalizados y texto en HTML
     const emailLower = email.toLowerCase();
-    const matching = allTasks.filter(t =>
-      (t.description || '').toLowerCase().includes(emailLower) ||
-      (t.name || '').toLowerCase().includes(emailLower)
-    );
+
+    function taskContainsEmail(t) {
+      // Descripción (puede venir como texto plano o con HTML/markdown)
+      const desc = (t.description || '').toLowerCase();
+      if (desc.includes(emailLower)) return true;
+
+      // Nombre de la tarea
+      if ((t.name || '').toLowerCase().includes(emailLower)) return true;
+
+      // Campos personalizados (custom fields del formulario)
+      const customFields = t.custom_fields || [];
+      for (const f of customFields) {
+        const val = f.value;
+        if (!val) continue;
+        if (typeof val === 'string' && val.toLowerCase().includes(emailLower)) return true;
+        // Algunos campos son objetos con propiedad "value" anidada
+        if (typeof val === 'object' && JSON.stringify(val).toLowerCase().includes(emailLower)) return true;
+      }
+
+      return false;
+    }
+
+    const matching = allTasks.filter(taskContainsEmail);
 
     if (matching.length === 0) {
+      // Modo debug: devuelve cuántas tareas hay en la lista para verificar que sí se están leyendo
       return res.status(404).json({
-        error: 'No encontramos solicitudes con ese correo. Verifica que el email sea exactamente igual al que usaste en el formulario.',
+        error: `No encontramos solicitudes con ese correo (se revisaron ${allTasks.length} tareas en la lista). Verifica que el email sea exactamente igual al que usaste en el formulario.`,
       });
     }
 
