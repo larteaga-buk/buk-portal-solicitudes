@@ -39,7 +39,7 @@ export default function LoginPage({ onLogin }) {
         <div style={styles.logoWrap}>
           <div style={styles.logoIcon}>
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="10" fill="#5b2dce"/>
+              <rect width="32" height="32" rx="10" fill="#2F4DAA"/>
               <path d="M8 8h8a6 6 0 010 12H8V8z" fill="white" opacity=".9"/>
               <path d="M8 14h10a4 4 0 010 8H8v-8z" fill="white"/>
             </svg>
@@ -111,7 +111,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #f5f4fb 0%, #ede8fb 100%)',
+    background: 'linear-gradient(135deg, #EEF2FB 0%, #D9E3FC 100%)',
     padding: '24px',
   },
   card: {
@@ -120,7 +120,7 @@ const styles = {
     padding: '48px 40px 36px',
     width: '100%',
     maxWidth: '420px',
-    boxShadow: '0 8px 40px rgba(91,45,206,.14)',
+    boxShadow: '0 8px 40px rgba(47,77,170,.14)',
     animation: 'fadeUp .35s ease both',
   },
   logoWrap: {
@@ -133,13 +133,13 @@ const styles = {
   logoText: {
     fontSize: '22px',
     fontWeight: 700,
-    color: '#5b2dce',
+    color: '#2F4DAA',
     letterSpacing: '-0.5px',
   },
   title: {
     fontSize: '22px',
     fontWeight: 700,
-    color: '#1a1a2e',
+    color: '#2B3B6A',
     marginBottom: '8px',
     lineHeight: 1.3,
   },
@@ -150,7 +150,7 @@ const styles = {
     lineHeight: 1.6,
   },
   form: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  label: { fontSize: '13px', fontWeight: 600, color: '#1a1a2e', marginBottom: '4px' },
+  label: { fontSize: '13px', fontWeight: 600, color: '#2B3B6A', marginBottom: '4px' },
   input: {
     width: '100%',
     padding: '11px 14px',
@@ -158,7 +158,7 @@ const styles = {
     border: '1.5px solid #d1d5e0',
     borderRadius: '10px',
     fontFamily: 'inherit',
-    color: '#1a1a2e',
+    color: '#2B3B6A',
     transition: 'border-color .2s',
     background: '#fafafa',
   },
@@ -175,7 +175,7 @@ const styles = {
   btn: {
     marginTop: '16px',
     padding: '12px',
-    background: '#5b2dce',
+    background: '#2F4DAA',
     color: '#fff',
     border: 'none',
     borderRadius: '10px',
