@@ -101,20 +101,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 2. Get team members → find user by email
-    const { team } = await clickup(`/team/${TEAM_ID}/member`, TOKEN);
-    const member = team?.members?.find(
-      m => m.user.email?.toLowerCase() === email.toLowerCase()
-    );
+    // 2. Get workspaces → find user by email
+    // GET /api/v2/team returns all workspaces with their members array
+    const teamsData = await clickup(`/team`, TOKEN);
+    const teams = teamsData.teams || [];
 
-    if (!member) {
+    // Find the matching workspace and the user within it
+    let userId = null;
+    let userName = null;
+
+    for (const team of teams) {
+      if (String(team.id) !== String(TEAM_ID)) continue;
+      const match = (team.members || []).find(
+        m => m.user?.email?.toLowerCase() === email.toLowerCase()
+      );
+      if (match) {
+        userId = match.user.id;
+        userName = match.user.username || match.user.email;
+        break;
+      }
+    }
+
+    if (!userId) {
       return res.status(404).json({
         error: 'No se encontró ningún usuario con ese correo en ClickUp.',
       });
     }
-
-    const userId = member.user.id;
-    const userName = member.user.username || member.user.email;
 
     // 3. Fetch tasks assigned to this user (paginate if needed)
     let allTasks = [];
