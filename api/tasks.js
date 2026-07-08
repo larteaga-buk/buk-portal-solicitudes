@@ -126,15 +126,21 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { email } = req.query;
+  const { email, country, team } = req.query;
+  const MODE = email ? 'email' : 'team';
 
-  // 1. Validar dominio del correo
-  const allowedDomains = (process.env.ALLOWED_EMAIL_DOMAINS || 'buk.com,buk.la')
-    .split(',').map(d => d.trim().toLowerCase());
-
-  const domain = email?.split('@')[1]?.toLowerCase();
-  if (!email || !domain || !allowedDomains.includes(domain)) {
-    return res.status(401).json({ error: 'Correo no válido. Debes usar tu email @buk.' });
+  // 1. Validar parámetros según modo
+  if (MODE === 'email') {
+    const allowedDomains = (process.env.ALLOWED_EMAIL_DOMAINS || 'buk.com,buk.la')
+      .split(',').map(d => d.trim().toLowerCase());
+    const domain = email?.split('@')[1]?.toLowerCase();
+    if (!email || !domain || !allowedDomains.includes(domain)) {
+      return res.status(401).json({ error: 'Correo no válido. Debes usar tu email @buk.' });
+    }
+  } else {
+    if (!country || !team) {
+      return res.status(400).json({ error: 'Debes seleccionar país y área.' });
+    }
   }
 
   const TOKEN = process.env.CLICKUP_API_TOKEN;
@@ -164,41 +170,49 @@ export default async function handler(req, res) {
 
       hasMore = tasks.length === 100;
       page++;
-      if (page > 19) break; // límite de seguridad: 2000 tareas
+      if (page > 19) break;
     }
 
-    // 3. Filtrar por email — busca en descripción, nombre, campos personalizados y texto en HTML
-    const emailLower = email.toLowerCase();
+    // 3. Filtrar según modo
+    let matching = [];
 
-    function taskContainsEmail(t) {
-      // Descripción (puede venir como texto plano o con HTML/markdown)
-      const desc = (t.description || '').toLowerCase();
-      if (desc.includes(emailLower)) return true;
-
-      // Nombre de la tarea
-      if ((t.name || '').toLowerCase().includes(emailLower)) return true;
-
-      // Campos personalizados (custom fields del formulario)
-      const customFields = t.custom_fields || [];
-      for (const f of customFields) {
-        const val = f.value;
-        if (!val) continue;
-        if (typeof val === 'string' && val.toLowerCase().includes(emailLower)) return true;
-        // Algunos campos son objetos con propiedad "value" anidada
-        if (typeof val === 'object' && JSON.stringify(val).toLowerCase().includes(emailLower)) return true;
-      }
-
-      return false;
-    }
-
-    const matching = allTasks.filter(taskContainsEmail);
-
-    if (matching.length === 0) {
-      // Modo debug: devuelve cuántas tareas hay en la lista para verificar que sí se están leyendo
-      return res.status(404).json({
-        error: `No encontramos solicitudes con ese correo (se revisaron ${allTasks.length} tareas en la lista). Verifica que el email sea exactamente igual al que usaste en el formulario.`,
+    if (MODE === 'email') {
+      const emailLower = email.toLowerCase();
+      matching = allTasks.filter(t => {
+        const desc = (t.description || '').toLowerCase();
+        if (desc.includes(emailLower)) return true;
+        if ((t.name || '').toLowerCase().includes(emailLower)) return true;
+        for (const f of (t.custom_fields || [])) {
+          const val = f.value;
+          if (!val) continue;
+          if (typeof val === 'string' && val.toLowerCase().includes(emailLower)) return true;
+          if (typeof val === 'object' && JSON.stringify(val).toLowerCase().includes(emailLower)) return true;
+        }
+        return false;
+      });
+    } else {
+      // Modo equipo: busca el país y el área en los campos del formulario dentro de la descripción
+      // Formato en descripción: "[¿De que país es tu solicitud?]: Colombia"
+      //                         "[¿A qué área perteneces?]: Marketing - Brand"
+      const countryLower = country.toLowerCase();
+      const teamLower = team.toLowerCase();
+      matching = allTasks.filter(t => {
+        const desc = (t.description || '').toLowerCase();
+        return desc.includes(countryLower) && desc.includes(teamLower);
       });
     }
+
+    if (matching.length === 0) {
+      const msg = MODE === 'email'
+        ? `No encontramos solicitudes con ese correo (se revisaron ${allTasks.length} tareas). Verifica que el email sea exactamente igual al que usaste en el formulario.`
+        : `No encontramos solicitudes para ${country} · ${team}.`;
+      return res.status(404).json({ error: msg });
+    }
+
+    // Usuario para mostrar en el header
+    const userDisplay = MODE === 'email'
+      ? { name: email.split('@')[0], email }
+      : { name: `${country} · ${team}`, country, team };
 
     // 4. Agrupar por área
     const grouped = Object.fromEntries(AREAS.map(a => [a, []]));
@@ -226,10 +240,7 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.json({
-      user: { name: email.split('@')[0], email },
-      tasks: grouped,
-    });
+    return res.json({ user: userDisplay, tasks: grouped });
 
   } catch (err) {
     console.error('[/api/tasks]', err);
