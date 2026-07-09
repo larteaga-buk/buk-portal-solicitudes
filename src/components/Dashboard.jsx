@@ -62,7 +62,7 @@ export default function Dashboard({ session, onLogout }) {
           const meta = AREA_META[area]
           const count = tasks[area]?.length || 0
           const done = tasks[area]?.filter(t => /complet|done|cerrad|closed/i.test(t.status)).length || 0
-          const totalPuntos = area === 'DISEÑO'
+          const totalPuntos = (area === 'DISEÑO' || area === 'AUDIOVISUAL')
             ? (tasks[area] || []).reduce((sum, t) => sum + (t.puntos || 0), 0)
             : null
           return (
@@ -125,7 +125,7 @@ export default function Dashboard({ session, onLogout }) {
             <p style={s.emptyText}>No tienes tareas en el área de <strong>{activeTab}</strong></p>
           </div>
         ) : (
-          <TaskTable tasks={currentTasks} areaColor={AREA_META[activeTab]?.color} showPuntos={activeTab === 'DISEÑO'} />
+          <TaskTable tasks={currentTasks} areaColor={AREA_META[activeTab]?.color} showPuntos={activeTab === 'DISEÑO' || activeTab === 'AUDIOVISUAL'} />
         )}
       </div>
 
