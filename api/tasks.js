@@ -90,6 +90,18 @@ function findCustomField(task, ...patterns) {
   return null;
 }
 
+// Extrae Puntos_Carga desde la descripción → "• Puntos_Carga: [5]" o "Puntos_Carga: 5"
+function findPuntosFromDescription(description) {
+  if (!description) return null;
+  for (const line of description.split('\n')) {
+    if (/puntos_carga/i.test(line)) {
+      const match = line.match(/[:\[]\s*(\d+(?:\.\d+)?)\s*\]?/)
+      if (match) return Number(match[1]);
+    }
+  }
+  return null;
+}
+
 // Extrae el link de Entregable_Final desde el texto de la descripción
 // Formato esperado: "• Entregable_Final: https://..." o "• Entregable_Final: [texto](url)"
 function findEntregableFromDescription(description) {
@@ -235,6 +247,7 @@ export default async function handler(req, res) {
         dateDue: task.due_date ? Number(task.due_date) : null,
         clickupUrl: task.url,
         entregableLink,
+        puntos: findPuntosFromDescription(task.description),
         list: task.list?.name || '',
         space: task.space?.name || '',
       });
