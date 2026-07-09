@@ -62,6 +62,9 @@ export default function Dashboard({ session, onLogout }) {
           const meta = AREA_META[area]
           const count = tasks[area]?.length || 0
           const done = tasks[area]?.filter(t => /complet|done|cerrad|closed/i.test(t.status)).length || 0
+          const totalPuntos = area === 'DISEÑO'
+            ? (tasks[area] || []).reduce((sum, t) => sum + (t.puntos || 0), 0)
+            : null
           return (
             <button
               key={area}
@@ -76,6 +79,11 @@ export default function Dashboard({ session, onLogout }) {
               <div style={s.summaryName}>{area}</div>
               <div style={{ ...s.summaryCount, color: meta.color }}>{count}</div>
               <div style={s.summaryDone}>{done} completadas</div>
+              {totalPuntos !== null && (
+                <div style={{ ...s.summaryPuntos, color: meta.color }}>
+                  ⚡ {totalPuntos} pts en total
+                </div>
+              )}
             </button>
           )
         })}
@@ -117,7 +125,7 @@ export default function Dashboard({ session, onLogout }) {
             <p style={s.emptyText}>No tienes tareas en el área de <strong>{activeTab}</strong></p>
           </div>
         ) : (
-          <TaskTable tasks={currentTasks} areaColor={AREA_META[activeTab]?.color} />
+          <TaskTable tasks={currentTasks} areaColor={AREA_META[activeTab]?.color} showPuntos={activeTab === 'DISEÑO'} />
         )}
       </div>
 
@@ -198,6 +206,7 @@ const s = {
   summaryName: { fontSize: '11px', fontWeight: 600, color: '#9ba3b5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' },
   summaryCount: { fontSize: '28px', fontWeight: 700, lineHeight: 1, marginBottom: '4px' },
   summaryDone: { fontSize: '12px', color: '#9ba3b5' },
+  summaryPuntos: { fontSize: '12px', fontWeight: 700, marginTop: '6px' },
 
   tabBar: {
     maxWidth: '1200px',
