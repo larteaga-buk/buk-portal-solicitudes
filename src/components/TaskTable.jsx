@@ -42,7 +42,7 @@ const sb = {
   dot: { width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0 },
 }
 
-export default function TaskTable({ tasks, areaColor }) {
+export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
   const [expanded, setExpanded] = useState(null)
   const [sortKey, setSortKey] = useState('dateDue')
   const [sortDir, setSortDir] = useState('asc')
@@ -75,6 +75,7 @@ export default function TaskTable({ tasks, areaColor }) {
               { key: 'dateCreated', label: 'Fecha solicitada' },
               { key: 'dateDue',     label: 'Fecha de entrega' },
               { key: 'status',      label: 'Estado en ClickUp' },
+              ...(showPuntos ? [{ key: 'puntos', label: 'Puntos' }] : []),
               { key: null,          label: 'Entregable' },
             ].map(col => (
               <th
@@ -140,6 +141,15 @@ export default function TaskTable({ tasks, areaColor }) {
                   <td style={t.td}>
                     <StatusBadge status={task.status} color={task.statusColor} />
                   </td>
+
+                  {/* Puntos (solo Diseño) */}
+                  {showPuntos && (
+                    <td style={{ ...t.td, textAlign: 'center' }}>
+                      {task.puntos != null
+                        ? <span style={{ ...t.puntosBadge, borderColor: areaColor, color: areaColor }}>⚡ {task.puntos}</span>
+                        : <span style={t.noLink}>—</span>}
+                    </td>
+                  )}
 
                   {/* Entregable */}
                   <td style={t.td}>
@@ -231,6 +241,11 @@ const t = {
   },
   link: { fontSize: '13px', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' },
   noLink: { color: '#c8c0e8' },
+  puntosBadge: {
+    display: 'inline-block', padding: '2px 10px',
+    border: '1.5px solid', borderRadius: '99px',
+    fontSize: '12px', fontWeight: 700,
+  },
   descCell: { padding: '0 16px 16px 16px' },
   descBox: {
     background: '#f8f7fd', borderRadius: '10px', padding: '16px 18px',
