@@ -106,19 +106,14 @@ function findPuntosFromDescription(description) {
 // Primero busca "Tipo_Sprint: FUERA_DE_SPRINT / EN_SPRINT" en la descripción,
 // luego intenta custom fields como respaldo.
 function findSprintFromTask(task) {
-  // 1. Descripción: "Tipo_Sprint: FUERA_DE_SPRINT" o "Tipo_Sprint: EN_SPRINT"
+  // 1. Descripción: busca "Tipo_Sprint: FUERA_DE_SPRINT" o "Tipo_Sprint: EN_SPRINT"
   if (task.description) {
-    const parts = task.description.split(/[•\n]/);
-    for (const part of parts) {
-      if (/tipo_sprint/i.test(part)) {
-        const match = part.match(/tipo_sprint\s*:\s*([^\s•\n]+)/i);
-        if (match) {
-          const val = match[1].trim().toUpperCase();
-          if (val.includes('FUERA')) return 'No';
-          if (val.includes('EN_SPRINT') || val.includes('SPRINT')) return 'Sí';
-          return val;
-        }
-      }
+    const match = task.description.match(/tipo_sprint\s*:\s*([\w]+)/i);
+    if (match) {
+      const val = match[1].toUpperCase();
+      if (val.includes('FUERA')) return 'No';
+      if (val.includes('SPRINT')) return 'Sí';
+      return val;
     }
   }
   // 2. Custom fields como respaldo
