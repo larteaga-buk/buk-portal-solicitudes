@@ -65,9 +65,7 @@ export default function Dashboard({ session, onLogout }) {
           const totalPuntos = (area === 'DISEÑO' || area === 'AUDIOVISUAL')
             ? (tasks[area] || []).reduce((sum, t) => sum + (t.puntos || 0), 0)
             : null
-          const inSprint = (tasks[area] || []).filter(t =>
-            t.sprint && !['no', 'No', 'NO'].includes(t.sprint)
-          ).length
+          const inSprint = (tasks[area] || []).filter(t => t.sprint === 'Sí').length
           const outSprint = count - inSprint
           return (
             <button
