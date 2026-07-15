@@ -145,10 +145,10 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
 
                   {/* Sprint */}
                   <td style={{ ...t.td, textAlign: 'center' }}>
-                    {task.sprint === 'Sí' || task.sprint === 'Si' || task.sprint === 'YES' || task.sprint === 'Yes' || task.sprint === 'yes'
-                      ? <span style={t.sprintYes}>✓ Sí</span>
-                      : task.sprint && task.sprint !== 'No' && task.sprint !== 'NO'
-                        ? <span style={t.sprintOther}>{task.sprint}</span>
+                    {task.sprint === 'Sí'
+                      ? <span style={t.sprintYes}>✓ En sprint</span>
+                      : task.sprint === 'No'
+                        ? <span style={t.sprintNo}>Fuera de sprint ⚠️</span>
                         : <span style={t.noLink}>—</span>}
                   </td>
 
@@ -251,9 +251,9 @@ const t = {
     background: '#e8f8f0', color: '#1d8a5e',
     borderRadius: '99px', fontSize: '12px', fontWeight: 700,
   },
-  sprintOther: {
+  sprintNo: {
     display: 'inline-block', padding: '2px 10px',
-    background: '#EEF2FB', color: '#2F4DAA',
+    background: '#fff8e8', color: '#b07d10',
     borderRadius: '99px', fontSize: '12px', fontWeight: 600,
   },
   descCell: { padding: '0 16px 16px 16px' },
