@@ -73,7 +73,8 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
             {[
               { key: 'name',        label: 'Tarea' },
               { key: 'dateCreated', label: 'Fecha solicitada' },
-              { key: 'dateDue',     label: 'Fecha de entrega' },
+              { key: 'dateDue',     label: 'Fecha de deadline' },
+              { key: 'dateDone',    label: 'Fecha de entrega' },
               { key: 'status',      label: 'Estado en ClickUp' },
               { key: 'sprint',      label: 'Sprint' },
               ...(showPuntos ? [{ key: 'puntos', label: 'Puntos' }] : []),
@@ -126,7 +127,7 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                     <span style={t.dateVal}>{fmtDate(task.dateCreated)}</span>
                   </td>
 
-                  {/* Fecha de entrega */}
+                  {/* Fecha de deadline */}
                   <td style={t.td}>
                     <span style={{
                       ...t.dateVal,
@@ -136,6 +137,13 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                       {fmtDate(task.dateDue)}
                       {isOverdue && <span style={t.overduePill}>Vencida</span>}
                     </span>
+                  </td>
+
+                  {/* Fecha de entrega real (date_done) */}
+                  <td style={t.td}>
+                    {task.dateDone
+                      ? <span style={{ ...t.dateVal, color: '#1d8a5e', fontWeight: 600 }}>{fmtDate(task.dateDone)}</span>
+                      : <span style={t.noLink}>—</span>}
                   </td>
 
                   {/* Estado */}
@@ -182,7 +190,7 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                 {/* Expanded row: description */}
                 {isOpen && (
                   <tr key={task.id + '-desc'} style={{ background: '#faf8ff' }}>
-                    <td colSpan={6 + (showPuntos ? 1 : 0)} style={t.descCell}>
+                    <td colSpan={7 + (showPuntos ? 1 : 0)} style={t.descCell}>
                       <div style={t.descBox}>
                         <div style={t.descTitle}>Descripción</div>
                         {task.description
