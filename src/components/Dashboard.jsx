@@ -85,7 +85,7 @@ export default function Dashboard({ session, onLogout }) {
                 <div style={s.summarySprintRow}>
                   <span style={s.sprintIn}>🏃 {inSprint} en sprint</span>
                   <span style={s.sprintDivider}>·</span>
-                  <span style={s.sprintOut}>{outSprint} fuera</span>
+                  <span style={s.sprintOut}>{outSprint} fuera de sprint ⚠️</span>
                 </div>
               )}
               {totalPuntos !== null && (
@@ -218,7 +218,7 @@ const s = {
   summarySprintRow: { display: 'flex', alignItems: 'center', gap: '4px', marginTop: '5px', flexWrap: 'wrap' },
   sprintIn: { fontSize: '11px', fontWeight: 600, color: '#1d8a5e' },
   sprintDivider: { fontSize: '11px', color: '#c8c0e8' },
-  sprintOut: { fontSize: '11px', color: '#9ba3b5' },
+  sprintOut: { fontSize: '11px', color: '#b07d10', fontWeight: 600 },
   summaryPuntos: { fontSize: '12px', fontWeight: 700, marginTop: '6px' },
 
   tabBar: {
