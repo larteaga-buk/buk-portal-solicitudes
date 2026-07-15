@@ -65,8 +65,9 @@ export default function Dashboard({ session, onLogout }) {
           const totalPuntos = (area === 'DISEÑO' || area === 'AUDIOVISUAL')
             ? (tasks[area] || []).reduce((sum, t) => sum + (t.puntos || 0), 0)
             : null
-          const inSprint = (tasks[area] || []).filter(t => t.sprint === 'Sí').length
-          const outSprint = count - inSprint
+          const inSprint  = (tasks[area] || []).filter(t => t.sprint === 'Sí').length
+          const outSprint = (tasks[area] || []).filter(t => t.sprint === 'No').length
+          const hasSprint = inSprint + outSprint > 0
           return (
             <button
               key={area}
@@ -81,7 +82,7 @@ export default function Dashboard({ session, onLogout }) {
               <div style={s.summaryName}>{area}</div>
               <div style={{ ...s.summaryCount, color: meta.color }}>{count}</div>
               <div style={s.summaryDone}>{done} completadas</div>
-              {count > 0 && (
+              {hasSprint && (
                 <div style={s.summarySprintRow}>
                   <span style={s.sprintIn}>🏃 {inSprint} en sprint</span>
                   <span style={s.sprintDivider}>·</span>
