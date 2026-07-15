@@ -65,6 +65,10 @@ export default function Dashboard({ session, onLogout }) {
           const totalPuntos = (area === 'DISEÑO' || area === 'AUDIOVISUAL')
             ? (tasks[area] || []).reduce((sum, t) => sum + (t.puntos || 0), 0)
             : null
+          const inSprint = (tasks[area] || []).filter(t =>
+            t.sprint && !['no', 'No', 'NO'].includes(t.sprint)
+          ).length
+          const outSprint = count - inSprint
           return (
             <button
               key={area}
@@ -79,6 +83,13 @@ export default function Dashboard({ session, onLogout }) {
               <div style={s.summaryName}>{area}</div>
               <div style={{ ...s.summaryCount, color: meta.color }}>{count}</div>
               <div style={s.summaryDone}>{done} completadas</div>
+              {count > 0 && (
+                <div style={s.summarySprintRow}>
+                  <span style={s.sprintIn}>🏃 {inSprint} en sprint</span>
+                  <span style={s.sprintDivider}>·</span>
+                  <span style={s.sprintOut}>{outSprint} fuera</span>
+                </div>
+              )}
               {totalPuntos !== null && (
                 <div style={{ ...s.summaryPuntos, color: meta.color }}>
                   ⚡ {totalPuntos} pts en total
@@ -206,6 +217,10 @@ const s = {
   summaryName: { fontSize: '11px', fontWeight: 600, color: '#9ba3b5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' },
   summaryCount: { fontSize: '28px', fontWeight: 700, lineHeight: 1, marginBottom: '4px' },
   summaryDone: { fontSize: '12px', color: '#9ba3b5' },
+  summarySprintRow: { display: 'flex', alignItems: 'center', gap: '4px', marginTop: '5px', flexWrap: 'wrap' },
+  sprintIn: { fontSize: '11px', fontWeight: 600, color: '#1d8a5e' },
+  sprintDivider: { fontSize: '11px', color: '#c8c0e8' },
+  sprintOut: { fontSize: '11px', color: '#9ba3b5' },
   summaryPuntos: { fontSize: '12px', fontWeight: 700, marginTop: '6px' },
 
   tabBar: {
