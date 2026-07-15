@@ -102,23 +102,38 @@ function findPuntosFromDescription(description) {
   return null;
 }
 
-// Extrae si la tarea pertenece a un sprint (custom field con "sprint" en el nombre)
+// Extrae si la tarea pertenece a un sprint.
+// Primero busca "Tipo_Sprint: FUERA_DE_SPRINT / EN_SPRINT" en la descripción,
+// luego intenta custom fields como respaldo.
 function findSprintFromTask(task) {
+  // 1. Descripción: "Tipo_Sprint: FUERA_DE_SPRINT" o "Tipo_Sprint: EN_SPRINT"
+  if (task.description) {
+    const parts = task.description.split(/[•\n]/);
+    for (const part of parts) {
+      if (/tipo_sprint/i.test(part)) {
+        const match = part.match(/tipo_sprint\s*:\s*([^\s•\n]+)/i);
+        if (match) {
+          const val = match[1].trim().toUpperCase();
+          if (val.includes('FUERA')) return 'No';
+          if (val.includes('EN_SPRINT') || val.includes('SPRINT')) return 'Sí';
+          return val;
+        }
+      }
+    }
+  }
+  // 2. Custom fields como respaldo
   const fields = task.custom_fields || [];
   for (const field of fields) {
     const name = (field.name || '').toLowerCase();
     if (name.includes('sprint')) {
       const val = field.value;
       if (val === null || val === undefined || val === '') return null;
-      // Checkbox: "1" = sí, "0" = no
       if (val === '1' || val === 1 || val === true) return 'Sí';
       if (val === '0' || val === 0 || val === false) return 'No';
-      // Dropdown con opciones
       if (typeof val === 'number' && field.type_config?.options) {
         const opt = field.type_config.options.find(o => o.orderindex === val);
         return opt?.name || null;
       }
-      // Texto directo
       if (typeof val === 'string') return val;
       return null;
     }
