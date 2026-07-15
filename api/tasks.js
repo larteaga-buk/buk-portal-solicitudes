@@ -279,6 +279,7 @@ export default async function handler(req, res) {
         statusColor: task.status?.color || '#999',
         dateCreated: task.date_created ? Number(task.date_created) : null,
         dateDue: task.due_date ? Number(task.due_date) : null,
+        dateDone: task.date_done ? Number(task.date_done) : null,
         clickupUrl: task.url,
         entregableLink,
         puntos: findPuntosFromDescription(task.description),
