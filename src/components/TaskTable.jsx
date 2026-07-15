@@ -75,6 +75,7 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
               { key: 'dateCreated', label: 'Fecha solicitada' },
               { key: 'dateDue',     label: 'Fecha de entrega' },
               { key: 'status',      label: 'Estado en ClickUp' },
+              { key: 'sprint',      label: 'Sprint' },
               ...(showPuntos ? [{ key: 'puntos', label: 'Puntos' }] : []),
               { key: null,          label: 'Entregable' },
             ].map(col => (
@@ -142,6 +143,15 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                     <StatusBadge status={task.status} color={task.statusColor} />
                   </td>
 
+                  {/* Sprint */}
+                  <td style={{ ...t.td, textAlign: 'center' }}>
+                    {task.sprint === 'Sí' || task.sprint === 'Si' || task.sprint === 'YES' || task.sprint === 'Yes' || task.sprint === 'yes'
+                      ? <span style={t.sprintYes}>✓ Sí</span>
+                      : task.sprint && task.sprint !== 'No' && task.sprint !== 'NO'
+                        ? <span style={t.sprintOther}>{task.sprint}</span>
+                        : <span style={t.noLink}>—</span>}
+                  </td>
+
                   {/* Puntos (solo Diseño) */}
                   {showPuntos && (
                     <td style={{ ...t.td, textAlign: 'center' }}>
@@ -172,22 +182,12 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                 {/* Expanded row: description */}
                 {isOpen && (
                   <tr key={task.id + '-desc'} style={{ background: '#faf8ff' }}>
-                    <td colSpan={5} style={t.descCell}>
+                    <td colSpan={6 + (showPuntos ? 1 : 0)} style={t.descCell}>
                       <div style={t.descBox}>
                         <div style={t.descTitle}>Descripción</div>
                         {task.description
                           ? <p style={t.descText}>{task.description}</p>
                           : <p style={{ ...t.descText, color: '#9ba3b5', fontStyle: 'italic' }}>Sin descripción.</p>}
-                        <div style={t.descActions}>
-                          <a
-                            href={task.clickupUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ ...t.link, color: areaColor, fontSize: '13px' }}
-                          >
-                            Abrir en ClickUp ↗
-                          </a>
-                        </div>
                       </div>
                     </td>
                   </tr>
@@ -246,11 +246,20 @@ const t = {
     border: '1.5px solid', borderRadius: '99px',
     fontSize: '12px', fontWeight: 700,
   },
+  sprintYes: {
+    display: 'inline-block', padding: '2px 10px',
+    background: '#e8f8f0', color: '#1d8a5e',
+    borderRadius: '99px', fontSize: '12px', fontWeight: 700,
+  },
+  sprintOther: {
+    display: 'inline-block', padding: '2px 10px',
+    background: '#EEF2FB', color: '#2F4DAA',
+    borderRadius: '99px', fontSize: '12px', fontWeight: 600,
+  },
   descCell: { padding: '0 16px 16px 16px' },
   descBox: {
     background: '#f8f7fd', borderRadius: '10px', padding: '16px 18px',
   },
   descTitle: { fontSize: '11px', fontWeight: 700, color: '#9ba3b5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '8px' },
   descText: { fontSize: '14px', color: '#3d3a5a', lineHeight: 1.65 },
-  descActions: { marginTop: '12px', display: 'flex', gap: '16px' },
 }
