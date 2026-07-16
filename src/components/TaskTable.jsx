@@ -171,19 +171,22 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
 
                   {/* Entregable */}
                   <td style={t.td}>
-                    {task.entregableLink ? (
-                      <a
-                        href={task.entregableLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ ...t.link, color: areaColor }}
-                        onClick={e => e.stopPropagation()}
-                      >
-                        Ver entregable ↗
-                      </a>
-                    ) : (
-                      <span style={t.noLink}>—</span>
-                    )}
+                    {task.entregableLinks && task.entregableLinks.length > 0
+                      ? <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {task.entregableLinks.map((url, i) => (
+                            <a
+                              key={i}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ ...t.link, color: areaColor }}
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {task.entregableLinks.length > 1 ? `Entregable ${i + 1} ↗` : 'Ver entregable ↗'}
+                            </a>
+                          ))}
+                        </div>
+                      : <span style={t.noLink}>—</span>}
                   </td>
                 </tr>
 
