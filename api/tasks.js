@@ -138,24 +138,24 @@ function findSprintFromTask(task) {
   return null;
 }
 
-// Extrae el link de Entregable_Final desde el texto de la descripción
-// Formato esperado: "• Entregable_Final: https://..." o "• Entregable_Final: [texto](url)"
+// Extrae TODOS los links de Entregable_Final desde el texto de la descripción.
+// Devuelve un array con todos los URLs encontrados en la línea.
 function findEntregableFromDescription(description) {
-  if (!description) return null;
+  if (!description) return [];
 
   const lines = description.split('\n');
   for (const line of lines) {
     if (/entregable_final/i.test(line)) {
-      // URL directa: https://...
-      const urlMatch = line.match(/https?:\/\/[^\s\])"']+/);
-      if (urlMatch) return urlMatch[0];
+      // Markdown primero: [texto](url) — puede haber varios
+      const mdUrls = [...line.matchAll(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g)].map(m => m[2]);
+      if (mdUrls.length > 0) return mdUrls;
 
-      // Markdown: [texto](url)
-      const mdMatch = line.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
-      if (mdMatch) return mdMatch[2];
+      // URLs directas: extrae todas las que haya en la línea
+      const urls = [...line.matchAll(/https?:\/\/[^\s\])"']+/g)].map(m => m[0]);
+      if (urls.length > 0) return urls;
     }
   }
-  return null;
+  return [];
 }
 
 async function clickup(path, token) {
@@ -268,10 +268,11 @@ export default async function handler(req, res) {
 
     for (const task of matching) {
       const area = detectArea(task, AREA_METHOD);
-      const entregableLink =
-        findEntregableFromDescription(task.description) ||
-        findCustomField(task, 'entregable', 'link', 'url', 'deliverable', 'entrega') ||
-        null;
+      let entregableLinks = findEntregableFromDescription(task.description);
+      if (entregableLinks.length === 0) {
+        const customLink = findCustomField(task, 'entregable', 'link', 'url', 'deliverable', 'entrega');
+        if (customLink) entregableLinks = [customLink];
+      }
 
       grouped[area].push({
         id: task.id,
@@ -283,7 +284,7 @@ export default async function handler(req, res) {
         dateDue: task.due_date ? Number(task.due_date) : null,
         dateDone: task.date_done ? Number(task.date_done) : null,
         clickupUrl: task.url,
-        entregableLink,
+        entregableLinks,
         puntos: findPuntosFromDescription(task.description),
         sprint: findSprintFromTask(task),
         list: task.list?.name || '',
