@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import TaskTable from './TaskTable'
 
-const AREAS = ['CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT']
+const AREAS = ['CONVERSIÓN', 'CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT']
 
 const AREA_META = {
-  CRM:        { emoji: '🤝', color: '#E91E8C', bg: '#fde8f4' },
-  'DISEÑO':   { emoji: '🎨', color: '#2F4DAA', bg: '#D9E3FC' },
-  AUDIOVISUAL:{ emoji: '🎬', color: '#b8830e', bg: '#FEF8E6' },
-  FRONT:      { emoji: '💻', color: '#27ae60', bg: '#e8f8f0' },
+  'CONVERSIÓN': { emoji: '🔄', color: '#7C3AED', bg: '#ede9fe' },
+  CRM:          { emoji: '🤝', color: '#E91E8C', bg: '#fde8f4' },
+  'DISEÑO':     { emoji: '🎨', color: '#2F4DAA', bg: '#D9E3FC' },
+  AUDIOVISUAL:  { emoji: '🎬', color: '#b8830e', bg: '#FEF8E6' },
+  FRONT:        { emoji: '💻', color: '#27ae60', bg: '#e8f8f0' },
 }
 
 function fmtDate(ts) {
