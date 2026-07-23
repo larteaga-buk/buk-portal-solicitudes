@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 function fmtDate(ts) {
   if (!ts) return '—'
@@ -47,6 +47,35 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
   const [sortKey, setSortKey] = useState('dateDue')
   const [sortDir, setSortDir] = useState('asc')
 
+  const tableWrapRef = useRef(null)
+  const topScrollRef = useRef(null)
+  const phantomRef   = useRef(null)
+
+  // Sincroniza el scroll del deslizable superior con la tabla y viceversa
+  useEffect(() => {
+    const wrap = tableWrapRef.current
+    const top  = topScrollRef.current
+    if (!wrap || !top) return
+
+    // Ajusta el ancho del phantom al ancho real de la tabla
+    const updatePhantom = () => {
+      if (phantomRef.current) phantomRef.current.style.width = wrap.scrollWidth + 'px'
+    }
+    updatePhantom()
+    const ro = new ResizeObserver(updatePhantom)
+    ro.observe(wrap)
+
+    const onWrap = () => { top.scrollLeft = wrap.scrollLeft }
+    const onTop  = () => { wrap.scrollLeft = top.scrollLeft }
+    wrap.addEventListener('scroll', onWrap)
+    top.addEventListener('scroll', onTop)
+    return () => {
+      wrap.removeEventListener('scroll', onWrap)
+      top.removeEventListener('scroll', onTop)
+      ro.disconnect()
+    }
+  }, [tasks])
+
   function toggleSort(key) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortKey(key); setSortDir('asc') }
@@ -66,7 +95,13 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
   }
 
   return (
-    <div style={t.wrap}>
+    <div>
+      {/* Deslizable superior */}
+      <div ref={topScrollRef} style={t.topScroll}>
+        <div ref={phantomRef} style={{ height: '1px' }} />
+      </div>
+
+    <div ref={tableWrapRef} style={t.wrap}>
       <table style={t.table}>
         <thead>
           <tr style={t.headRow}>
@@ -217,15 +252,23 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
         </tbody>
       </table>
     </div>
+    </div>
   )
 }
 
 const t = {
+  topScroll: {
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    height: '12px',
+    marginBottom: '2px',
+  },
   wrap: {
     background: '#fff',
     borderRadius: '14px',
     border: '1px solid #e4e6ef',
-    overflow: 'hidden',
+    overflowX: 'auto',
+    overflowY: 'visible',
     animation: 'fadeUp .3s ease both',
   },
   table: { width: '100%', borderCollapse: 'collapse' },
