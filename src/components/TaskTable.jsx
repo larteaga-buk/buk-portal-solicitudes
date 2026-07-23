@@ -77,6 +77,7 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
               { key: 'dateDone',    label: 'Fecha de entrega' },
               { key: 'status',      label: 'Estado en ClickUp' },
               { key: 'sprint',      label: 'Sprint' },
+              { key: 'assignee',    label: 'Responsable' },
               ...(showPuntos ? [{ key: 'puntos', label: 'Puntos' }] : []),
               { key: null,          label: 'Entregable' },
             ].map(col => (
@@ -160,6 +161,13 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                         : <span style={t.noLink}>—</span>}
                   </td>
 
+                  {/* Responsable */}
+                  <td style={t.td}>
+                    {task.assignee
+                      ? <span style={t.assigneeBadge}>{task.assignee}</span>
+                      : <span style={t.noLink}>—</span>}
+                  </td>
+
                   {/* Puntos (solo Diseño) */}
                   {showPuntos && (
                     <td style={{ ...t.td, textAlign: 'center' }}>
@@ -193,7 +201,7 @@ export default function TaskTable({ tasks, areaColor, showPuntos = false }) {
                 {/* Expanded row: description */}
                 {isOpen && (
                   <tr key={task.id + '-desc'} style={{ background: '#faf8ff' }}>
-                    <td colSpan={7 + (showPuntos ? 1 : 0)} style={t.descCell}>
+                    <td colSpan={8 + (showPuntos ? 1 : 0)} style={t.descCell}>
                       <div style={t.descBox}>
                         <div style={t.descTitle}>Descripción</div>
                         {task.description
@@ -266,6 +274,11 @@ const t = {
     display: 'inline-block', padding: '2px 10px',
     background: '#fff8e8', color: '#b07d10',
     borderRadius: '99px', fontSize: '12px', fontWeight: 600,
+  },
+  assigneeBadge: {
+    display: 'inline-block', padding: '2px 10px',
+    background: '#f0f0f5', color: '#2B3B6A',
+    borderRadius: '99px', fontSize: '12px', fontWeight: 500,
   },
   descCell: { padding: '0 16px 16px 16px' },
   descBox: {
