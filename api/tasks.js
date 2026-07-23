@@ -14,7 +14,7 @@
  */
 
 const CLICKUP_BASE = 'https://api.clickup.com/api/v2';
-const AREAS = ['CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT'];
+const AREAS = ['CONVERSIÓN', 'CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT'];
 
 function normalize(str = '') {
   return str.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -84,7 +84,9 @@ function findCustomField(task, ...patterns) {
   for (const field of fields) {
     const fieldName = normalize(field.name || '');
     if (patterns.some(p => fieldName.includes(normalize(p)))) {
-      return field.value || field.url || null;
+      const val = field.url || field.value || null;
+      // Solo devuelve si es un URL válido
+      if (val && /^https?:\/\//i.test(val)) return val;
     }
   }
   return null;
@@ -139,19 +141,27 @@ function findSprintFromTask(task) {
 }
 
 // Extrae TODOS los links de Entregable_Final desde el texto de la descripción.
-// Devuelve un array con todos los URLs encontrados en la línea.
+// Solo devuelve URLs válidas (que empiecen con http:// o https://).
 function findEntregableFromDescription(description) {
   if (!description) return [];
 
-  const lines = description.split('\n');
-  for (const line of lines) {
-    if (/entregable_final/i.test(line)) {
-      // Markdown primero: [texto](url) — puede haber varios
-      const mdUrls = [...line.matchAll(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g)].map(m => m[2]);
+  const isValidUrl = (s) => /^https?:\/\/.+/i.test(s);
+
+  // Busca la línea o segmento que contenga Entregable_Final
+  // Soporta tanto separación por \n como por ●
+  const segments = description.split(/\n|●/).map(s => s.trim());
+  for (const seg of segments) {
+    if (/entregable_final/i.test(seg)) {
+      // Markdown: [texto](url)
+      const mdUrls = [...seg.matchAll(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g)]
+        .map(m => m[2])
+        .filter(isValidUrl);
       if (mdUrls.length > 0) return mdUrls;
 
-      // URLs directas: extrae todas las que haya en la línea
-      const urls = [...line.matchAll(/https?:\/\/[^\s\])"']+/g)].map(m => m[0]);
+      // URLs directas
+      const urls = [...seg.matchAll(/https?:\/\/[^\s\])"']+/g)]
+        .map(m => m[0])
+        .filter(isValidUrl);
       if (urls.length > 0) return urls;
     }
   }
@@ -287,6 +297,7 @@ export default async function handler(req, res) {
         entregableLinks,
         puntos: findPuntosFromDescription(task.description),
         sprint: findSprintFromTask(task),
+        assignee: (task.assignees || []).map(a => a.username || a.email?.split('@')[0] || '').filter(Boolean).join(', ') || null,
         list: task.list?.name || '',
         space: task.space?.name || '',
       });
