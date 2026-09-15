@@ -1,0 +1,983 @@
+<title>Portal de solicitantes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+  /* ── Tokens ─────────────────────────────────────────────── */
+  :root {
+    --brand: #2F4DAA;
+    --brand-dark: #26408f;
+    --ink: #2B3B6A;
+    --muted: #5f6880;
+    --faint: #9ba3b5;
+    --ground: #EEF2FB;
+    --surface: #ffffff;
+    --line: #e4e6ef;
+    --line-soft: #f0f0f5;
+    --row-alt: #fafafa;
+    --open-bg: #faf8ff;
+    --desc-bg: #f8f7fd;
+    --danger: #d6552a;
+    --danger-bg: #fff0ea;
+    --ok: #1d8a5e;
+    --ok-bg: #e8f8f0;
+    --warn: #b07d10;
+    --warn-bg: #fff8e8;
+    --info: #1a7fc1;
+    --info-bg: #e8f4fd;
+    --error-text: #e53e3e;
+    --error-bg: #fff5f5;
+    --error-line: #fed7d7;
+    --shadow-card: 0 24px 64px -16px rgba(47, 77, 170, .22), 0 4px 16px rgba(47, 77, 170, .08);
+    --shadow-soft: 0 1px 2px rgba(47, 77, 170, .05), 0 4px 14px rgba(47, 77, 170, .07);
+    --shadow-lift: 0 8px 24px rgba(47, 77, 170, .14);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--ground);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button { font-family: inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* ── Login ──────────────────────────────────────────────── */
+  .login-root {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(1100px 560px at 88% -12%, rgba(47, 77, 170, .14), transparent 60%),
+      radial-gradient(900px 520px at -12% 108%, rgba(124, 58, 237, .10), transparent 55%),
+      linear-gradient(135deg, #EEF2FB 0%, #DCE5FB 100%);
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid rgba(47, 77, 170, .08);
+    border-radius: 24px;
+    padding: 48px 44px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--shadow-card);
+    animation: fadeUp .35s ease both;
+  }
+  .logo-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .logo-icon { line-height: 0; filter: drop-shadow(0 3px 8px rgba(47, 77, 170, .3)); }
+  .logo-text { font-size: 22px; font-weight: 800; color: var(--brand); letter-spacing: -0.5px; }
+  .login-title { font-size: 24px; font-weight: 800; color: var(--ink); margin: 0 0 6px; line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; }
+  .login-sub { font-size: 14px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+
+  .mode-toggle {
+    display: flex;
+    background: var(--ground);
+    border: 1px solid rgba(47, 77, 170, .06);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 24px;
+    gap: 4px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, color .2s, box-shadow .2s;
+  }
+  .mode-btn.active {
+    background: var(--surface);
+    color: var(--brand);
+    box-shadow: 0 2px 8px rgba(47, 77, 170, .16);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .field label { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .field input, .field select {
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    border: 1.5px solid #d1d5e0;
+    border-radius: 10px;
+    color: var(--ink);
+    background: #fafafa;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--brand);
+    background: var(--surface);
+    box-shadow: 0 0 0 4px rgba(47, 77, 170, .12);
+  }
+  .field input.invalid { border-color: var(--error-text); }
+  .field input.invalid:focus { box-shadow: 0 0 0 4px rgba(229, 62, 62, .10); }
+  .field select { cursor: pointer; }
+  .field select option { color: var(--ink); }
+  .hint { font-size: 12px; color: var(--error-text); margin: 2px 0 0; }
+
+  .error-msg {
+    font-size: 13px;
+    color: var(--error-text);
+    background: var(--error-bg);
+    border: 1px solid var(--error-line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 4px 0 0;
+  }
+
+  .btn-primary {
+    margin-top: 18px;
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(180deg, #3d5cc0 0%, var(--brand) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(47, 77, 170, .32);
+    transition: transform .18s, box-shadow .18s, opacity .2s;
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(47, 77, 170, .38); }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); box-shadow: 0 4px 12px rgba(47, 77, 170, .3); }
+  .btn-primary:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2.5px solid rgba(255, 255, 255, .4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: inline-block;
+  }
+  .login-footer { margin: 24px 0 0; text-align: center; font-size: 12px; color: #b0b8cc; }
+
+  /* ── Dashboard ──────────────────────────────────────────── */
+  .dash-root { min-height: 100vh; background: var(--ground); }
+
+  .dash-header {
+    background: rgba(255, 255, 255, .88);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .dash-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-name { font-size: 15px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+  .brand-sub { font-size: 11px; color: var(--faint); margin-top: 1px; }
+
+  .user-box { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(180deg, #3d5cc0, var(--brand)); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; flex-shrink: 0;
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px rgba(47, 77, 170, .25);
+  }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .user-email { font-size: 11px; color: var(--faint); line-height: 1.3; }
+  .logout-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--faint); padding: 6px; border-radius: 8px;
+    display: flex; align-items: center;
+    transition: color .2s;
+  }
+  .logout-btn:hover { color: var(--ink); }
+
+  .summary-row {
+    max-width: 1200px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 18px 16px;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+    animation: fadeUp .3s ease both;
+  }
+  .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+  .summary-card.active { border-color: var(--area-color); box-shadow: 0 0 0 2px var(--area-shadow), 0 6px 20px var(--area-shadow); }
+  .summary-emoji {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 12px;
+    background: var(--area-bg);
+  }
+  .summary-name { font-size: 11px; font-weight: 700; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+  .summary-count { font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 4px; color: var(--area-color); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .summary-done { font-size: 12px; color: var(--faint); }
+  .progress { height: 4px; border-radius: 99px; background: var(--line-soft); margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: var(--area-color); opacity: .85; transition: width .5s ease; }
+  .summary-sprint { display: flex; align-items: center; gap: 4px; margin-top: 5px; flex-wrap: wrap; font-size: 11px; }
+  .sprint-in { font-weight: 600; color: var(--ok); }
+  .sprint-divider { color: #c8c0e8; }
+  .sprint-out { color: var(--warn); font-weight: 600; }
+  .summary-puntos { font-size: 12px; font-weight: 700; margin-top: 6px; color: var(--area-color); font-variant-numeric: tabular-nums; }
+
+  .tab-bar {
+    max-width: 1200px;
+    margin: 20px auto 0;
+    padding: 0 24px;
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .tab {
+    background: none; border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+    margin-bottom: -1px;
+    transition: color .2s, border-color .2s;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--area-color); border-bottom-color: var(--area-color); font-weight: 800; }
+  .tab-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 7px; border-radius: 99px;
+    background: var(--line-soft); color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .tab.active .tab-badge { background: var(--area-bg); color: var(--area-color); }
+
+  .table-section { max-width: 1200px; margin: 0 auto; padding: 20px 24px 48px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 64px 24px;
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1px solid var(--line);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { color: var(--faint); font-size: 15px; margin: 0; }
+
+  /* ── Task table ─────────────────────────────────────────── */
+  .top-scroll { overflow-x: auto; overflow-y: hidden; height: 12px; margin-bottom: 2px; }
+  .top-scroll > div { height: 1px; }
+
+  .table-wrap {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-soft);
+    overflow-x: auto;
+    animation: fadeUp .3s ease both;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--desc-bg); }
+  th {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+  }
+  th.sortable { cursor: pointer; }
+  .sort-icon { color: #c8c0e8; margin-left: 4px; }
+  .sort-icon.active { color: var(--area-color); }
+
+  tbody tr.task-row { border-bottom: 1px solid var(--line-soft); cursor: pointer; transition: background .15s; }
+  tbody tr.task-row:hover { background: var(--desc-bg); }
+  td { padding: 14px 16px; font-size: 14px; color: #1a1a2e; vertical-align: middle; }
+  td.td-name { max-width: 320px; }
+
+  .task-name-row { display: flex; align-items: flex-start; gap: 6px; }
+  .chevron { color: #c8c0e8; font-size: 11px; margin-top: 2px; flex-shrink: 0; }
+  .task-name { line-height: 1.45; font-weight: 500; }
+  .list-tag {
+    display: inline-block; margin-top: 4px; margin-left: 17px;
+    font-size: 11px; color: var(--faint); background: var(--line-soft);
+    padding: 1px 7px; border-radius: 99px;
+  }
+
+  .date-val { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .date-val.overdue { color: var(--danger); font-weight: 600; }
+  .date-val.done { color: var(--ok); font-weight: 600; }
+  .overdue-pill {
+    display: inline-block; margin-left: 6px;
+    font-size: 10px; font-weight: 700; color: var(--danger);
+    background: var(--danger-bg); padding: 1px 6px; border-radius: 99px;
+  }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 99px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .sprint-yes {
+    display: inline-block; padding: 2px 10px;
+    background: var(--ok-bg); color: var(--ok);
+    border-radius: 99px; font-size: 12px; font-weight: 700;
+  }
+  .sprint-no {
+    display: inline-block; padding: 2px 10px;
+    background: var(--warn-bg); color: var(--warn);
+    border-radius: 99px; font-size: 12px; font-weight: 600;
+  }
+  .assignee-badge {
+    display: inline-block; padding: 2px 10px;
+    background: var(--line-soft); color: var(--ink);
+    border-radius: 99px; font-size: 12px; font-weight: 500;
+  }
+  .puntos-badge {
+    display: inline-block; padding: 2px 10px;
+    border: 1.5px solid var(--area-color); color: var(--area-color);
+    border-radius: 99px; font-size: 12px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .no-val { color: #c8c0e8; }
+
+  .entregable-links { display: flex; flex-direction: column; gap: 4px; }
+  .entregable-link { font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--area-color); }
+  .entregable-link:hover { text-decoration: underline; }
+
+  tr.desc-row { background: var(--open-bg); }
+  .desc-cell { padding: 0 16px 16px; }
+  .desc-box { background: var(--desc-bg); border-radius: 10px; padding: 16px 18px; }
+  .desc-title { font-size: 11px; font-weight: 700; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+  .desc-text { font-size: 14px; color: #3d3a5a; line-height: 1.65; margin: 0; white-space: pre-wrap; overflow-wrap: break-word; }
+  .desc-text.empty { color: var(--faint); font-style: italic; }
+
+  /* ── Dashboard error banner ─────────────────────────────── */
+  .dash-error {
+    max-width: 1200px;
+    margin: 24px auto 0;
+    padding: 14px 18px;
+    background: var(--error-bg);
+    border: 1px solid var(--error-line);
+    border-radius: 10px;
+    color: var(--error-text);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .dash-error button {
+    background: none; border: 1px solid var(--error-line); border-radius: 8px;
+    color: var(--error-text); font-size: 13px; font-weight: 600;
+    padding: 6px 12px; cursor: pointer; white-space: nowrap;
+  }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .login-card { padding: 32px 24px 28px; }
+    .dash-header-inner { padding: 12px 16px; }
+    .summary-row, .tab-bar, .table-section { padding-left: 16px; padding-right: 16px; }
+    .user-email { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div id="app"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   Portal de Solicitantes · Buk Marketing
+   Cliente del Web App de Apps Script.
+   El servidor (Code.gs) expone getTasks(opts) vía google.script.run
+   e inyecta bootstrap = { email, countries, teams, areas }.
+   ═══════════════════════════════════════════════════════════ */
+
+// ── Datos inyectados por el servidor ─────────────────────────
+// <?!= bootstrap ?> es un printing scriptlet: el servidor escribe
+// el JSON aquí antes de servir la página.
+var BOOT = <?!= bootstrap ?> || {};
+var COUNTRIES = BOOT.countries || [];
+var TEAMS = BOOT.teams || [];
+var AREAS = BOOT.areas || ['CONVERSIÓN', 'CRM', 'DISEÑO', 'AUDIOVISUAL', 'FRONT'];
+var SESSION_EMAIL = BOOT.email || '';
+
+var AREA_META = {
+  'CONVERSIÓN': { emoji: '🔄', color: '#7C3AED', bg: '#ede9fe' },
+  'CRM':        { emoji: '🤝', color: '#E91E8C', bg: '#fde8f4' },
+  'DISEÑO':     { emoji: '🎨', color: '#2F4DAA', bg: '#D9E3FC' },
+  'AUDIOVISUAL':{ emoji: '🎬', color: '#b8830e', bg: '#FEF8E6' },
+  'FRONT':      { emoji: '💻', color: '#27ae60', bg: '#e8f8f0' },
+  'OTRO':       { emoji: '📦', color: '#5f6880', bg: '#f0f0f5' }
+};
+function metaFor(area) { return AREA_META[area] || AREA_META.OTRO; }
+
+// ── Estado ───────────────────────────────────────────────────
+var state = {
+  view: 'login',            // 'login' | 'dashboard'
+  mode: 'email',            // 'email' | 'team'
+  email: SESSION_EMAIL,
+  country: '',
+  team: '',
+  loading: false,
+  error: '',
+  session: null,            // { user, tasks, mode, email, country, team }
+  activeTab: AREAS.indexOf('CRM') >= 0 ? 'CRM' : AREAS[0],
+  expanded: null,
+  sortKey: 'dateDue',
+  sortDir: 'asc'
+};
+
+// ── Utilidades ───────────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  try {
+    return new Date(Number(ts)).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch (e) { return '—'; }
+}
+
+function isBukEmail(email) {
+  var domain = String(email || '').split('@')[1];
+  return !!domain && domain.toLowerCase().indexOf('buk.') === 0;
+}
+
+function isDoneStatus(status) {
+  return /complet|done|cerrad|closed/i.test(status || '');
+}
+
+var LOGO_SVG =
+  '<svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">' +
+    '<rect width="32" height="32" rx="10" fill="#2F4DAA"/>' +
+    '<path d="M8 8h8a6 6 0 010 12H8V8z" fill="white" opacity=".9"/>' +
+    '<path d="M8 14h10a4 4 0 010 8H8v-8z" fill="white"/>' +
+  '</svg>';
+
+var LOGO_SVG_SM = LOGO_SVG.replace('width="32" height="32"', 'width="26" height="26"');
+
+var LOGOUT_SVG =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>' +
+  '</svg>';
+
+// ── Llamada al servidor ──────────────────────────────────────
+function callGetTasks(opts) {
+  return new Promise(function (resolve, reject) {
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      reject(new Error('Esta página debe abrirse como Web App de Google Apps Script.'));
+      return;
+    }
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(function (err) {
+        reject(new Error((err && err.message) || String(err) || 'Error al cargar tareas'));
+      })
+      .getTasks(opts);
+  });
+}
+
+// ── Acciones ─────────────────────────────────────────────────
+function handleSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (state.loading) return;
+
+  var opts;
+  if (state.mode === 'email') {
+    if (!isBukEmail(state.email)) return;
+    opts = { mode: 'email', email: state.email.trim().toLowerCase() };
+  } else {
+    if (!state.country || !state.team) return;
+    opts = { mode: 'team', country: state.country, team: state.team };
+  }
+
+  state.loading = true;
+  state.error = '';
+  render();
+
+  callGetTasks(opts).then(function (data) {
+    state.session = {
+      user: data.user,
+      tasks: data.tasks || {},
+      mode: state.mode,
+      email: opts.email || null,
+      country: opts.country || null,
+      team: opts.team || null
+    };
+    state.loading = false;
+    state.view = 'dashboard';
+    state.expanded = null;
+    // Si el tab activo no tiene tareas, saltar al primero con tareas
+    var tasks = state.session.tasks;
+    if (!tasks[state.activeTab] || !tasks[state.activeTab].length) {
+      for (var i = 0; i < AREAS.length; i++) {
+        if (tasks[AREAS[i]] && tasks[AREAS[i]].length) { state.activeTab = AREAS[i]; break; }
+      }
+    }
+    render();
+  }).catch(function (err) {
+    state.loading = false;
+    state.error = err.message || 'Error al cargar tareas';
+    render();
+  });
+}
+
+function handleLogout() {
+  state.view = 'login';
+  state.session = null;
+  state.error = '';
+  state.expanded = null;
+  render();
+}
+
+function refreshTasks() {
+  if (!state.session) return;
+  var s = state.session;
+  var opts = s.mode === 'email'
+    ? { mode: 'email', email: s.email }
+    : { mode: 'team', country: s.country, team: s.team };
+  state.error = '';
+  render();
+  callGetTasks(opts).then(function (data) {
+    state.session.tasks = data.tasks || {};
+    state.session.user = data.user;
+    render();
+  }).catch(function (err) {
+    state.error = err.message || 'Error al actualizar';
+    render();
+  });
+}
+
+// ── Render: Login ────────────────────────────────────────────
+function renderLogin() {
+  var emailInvalid = state.email && !isBukEmail(state.email);
+  var canSubmit = state.mode === 'email'
+    ? isBukEmail(state.email)
+    : (state.country && state.team);
+
+  var countryOpts = '<option value="">Selecciona tu país…</option>' + COUNTRIES.map(function (c) {
+    return '<option value="' + esc(c) + '"' + (state.country === c ? ' selected' : '') + '>' + esc(c) + '</option>';
+  }).join('');
+
+  var teamOpts = '<option value="">Selecciona tu área…</option>' + TEAMS.map(function (t) {
+    return '<option value="' + esc(t) + '"' + (state.team === t ? ' selected' : '') + '>' + esc(t) + '</option>';
+  }).join('');
+
+  var fieldsHtml = state.mode === 'email'
+    ? '<div class="field">' +
+        '<label for="f-email">Correo @buk</label>' +
+        '<input id="f-email" type="email" value="' + esc(state.email) + '" placeholder="tu.nombre@buk.com" autocomplete="email" required' +
+          (emailInvalid ? ' class="invalid"' : '') + ' />' +
+        (emailInvalid ? '<p class="hint" id="f-email-hint">Solo se permiten correos @buk</p>' : '') +
+      '</div>'
+    : '<div class="field">' +
+        '<label for="f-country">País</label>' +
+        '<select id="f-country" required>' + countryOpts + '</select>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label for="f-team">Área</label>' +
+        '<select id="f-team" required>' + teamOpts + '</select>' +
+      '</div>';
+
+  return '' +
+  '<div class="login-root">' +
+    '<div class="login-card">' +
+      '<div class="logo-wrap"><span class="logo-icon">' + LOGO_SVG + '</span><span class="logo-text">buk</span></div>' +
+      '<h1 class="login-title">Portal de solicitantes</h1>' +
+      '<p class="login-sub">Consulta el estado de tus solicitudes de Marketing.</p>' +
+
+      '<div class="mode-toggle" role="tablist">' +
+        '<button type="button" class="mode-btn' + (state.mode === 'email' ? ' active' : '') + '" data-action="mode-email" role="tab" aria-selected="' + (state.mode === 'email') + '">✉️ Mi correo</button>' +
+        '<button type="button" class="mode-btn' + (state.mode === 'team' ? ' active' : '') + '" data-action="mode-team" role="tab" aria-selected="' + (state.mode === 'team') + '">👥 Mi equipo</button>' +
+      '</div>' +
+
+      '<form id="login-form" novalidate>' +
+        fieldsHtml +
+        (state.error ? '<p class="error-msg" id="login-error" role="alert">' + esc(state.error) + '</p>' : '') +
+        '<button type="submit" class="btn-primary" id="login-submit"' + ((!canSubmit || state.loading) ? ' disabled' : '') + '>' +
+          (state.loading ? '<span class="spinner"></span> Cargando…' : 'Ver mis solicitudes') +
+        '</button>' +
+      '</form>' +
+
+      '<p class="login-footer">Marketing Corp · Buk</p>' +
+    '</div>' +
+  '</div>';
+}
+
+// ── Render: Dashboard ────────────────────────────────────────
+function renderSummaryCard(area) {
+  var meta = metaFor(area);
+  var tasks = state.session.tasks[area] || [];
+  var count = tasks.length;
+  var done = tasks.filter(function (t) { return isDoneStatus(t.status); }).length;
+  var inSprint = tasks.filter(function (t) { return t.sprint === 'Sí'; }).length;
+  var outSprint = tasks.filter(function (t) { return t.sprint === 'No'; }).length;
+  var hasSprint = inSprint + outSprint > 0;
+  var showPuntos = area === 'DISEÑO' || area === 'AUDIOVISUAL';
+  var totalPuntos = showPuntos
+    ? tasks.reduce(function (sum, t) { return sum + (t.puntos || 0); }, 0)
+    : null;
+  var pct = count ? Math.round((done / count) * 100) : 0;
+  var active = state.activeTab === area;
+
+  return '' +
+  '<button type="button" class="summary-card' + (active ? ' active' : '') + '" data-action="tab" data-area="' + esc(area) + '"' +
+    ' style="--area-color:' + meta.color + ';--area-bg:' + meta.bg + ';--area-shadow:' + meta.color + '22">' +
+    '<div class="summary-emoji">' + meta.emoji + '</div>' +
+    '<div class="summary-name">' + esc(area) + '</div>' +
+    '<div class="summary-count">' + count + '</div>' +
+    '<div class="summary-done">' + done + ' completadas</div>' +
+    '<div class="progress"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+    (hasSprint
+      ? '<div class="summary-sprint"><span class="sprint-in">🏃 ' + inSprint + ' en sprint</span>' +
+        '<span class="sprint-divider">·</span>' +
+        '<span class="sprint-out">' + outSprint + ' fuera de sprint ⚠️</span></div>'
+      : '') +
+    (totalPuntos !== null
+      ? '<div class="summary-puntos">⚡ ' + totalPuntos + ' pts en total</div>'
+      : '') +
+  '</button>';
+}
+
+function renderTab(area) {
+  var meta = metaFor(area);
+  var count = (state.session.tasks[area] || []).length;
+  var active = state.activeTab === area;
+  return '' +
+  '<button type="button" class="tab' + (active ? ' active' : '') + '" data-action="tab" data-area="' + esc(area) + '"' +
+    ' style="--area-color:' + meta.color + ';--area-bg:' + meta.bg + '" role="tab" aria-selected="' + active + '">' +
+    meta.emoji + ' ' + esc(area) +
+    '<span class="tab-badge">' + count + '</span>' +
+  '</button>';
+}
+
+function statusBadgeHtml(task) {
+  var label = task.status || 'Sin estado';
+  var bg = '#f0f0f5', fg = '#5f6880';
+  var color = task.statusColor;
+  if (color && color !== '#000000' && color !== '#ffffff') {
+    fg = color;
+    bg = color + '22';
+  } else {
+    var lc = (task.status || '').toLowerCase();
+    if (/complet|done|cerrad|entregad/.test(lc)) { bg = 'var(--ok-bg)'; fg = 'var(--ok)'; }
+    else if (/progress|curso|review|revisión/.test(lc)) { bg = 'var(--info-bg)'; fg = 'var(--info)'; }
+    else if (/pending|espera|pendiente/.test(lc)) { bg = 'var(--warn-bg)'; fg = 'var(--warn)'; }
+    else if (/bloqueado|blocked|cancel/.test(lc)) { bg = 'var(--danger-bg)'; fg = 'var(--danger)'; }
+  }
+  return '<span class="status-badge" style="background:' + bg + ';color:' + fg + '">' +
+    '<span class="status-dot" style="background:' + fg + '"></span>' + esc(label) + '</span>';
+}
+
+function renderTaskRows(tasks, showPuntos) {
+  var meta = metaFor(state.activeTab);
+  var sorted = tasks.slice().sort(function (a, b) {
+    var av = a[state.sortKey], bv = b[state.sortKey];
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string') {
+      return state.sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    }
+    return state.sortDir === 'asc' ? av - bv : bv - av;
+  });
+
+  var now = Date.now();
+  var colSpan = 8 + (showPuntos ? 1 : 0);
+
+  return sorted.map(function (task, i) {
+    var isOpen = state.expanded === task.id;
+    var isOverdue = task.dateDue && task.dateDue < now && !isDoneStatus(task.status);
+    var rowBg = isOpen ? 'background:var(--open-bg)' : (i % 2 === 0 ? '' : 'background:var(--row-alt)');
+
+    var entregable = (task.entregableLinks && task.entregableLinks.length)
+      ? '<div class="entregable-links">' + task.entregableLinks.map(function (url, j) {
+          var label = task.entregableLinks.length > 1 ? 'Entregable ' + (j + 1) + ' ↗' : 'Ver entregable ↗';
+          return '<a class="entregable-link" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+        }).join('') + '</div>'
+      : '<span class="no-val">—</span>';
+
+    var sprint = task.sprint === 'Sí'
+      ? '<span class="sprint-yes">✓ En sprint</span>'
+      : task.sprint === 'No'
+        ? '<span class="sprint-no">Fuera de sprint ⚠️</span>'
+        : '<span class="no-val">—</span>';
+
+    var row = '' +
+    '<tr class="task-row" data-action="expand" data-id="' + esc(task.id) + '" style="' + rowBg + '">' +
+      '<td class="td-name">' +
+        '<div class="task-name-row"><span class="chevron">' + (isOpen ? '▾' : '▸') + '</span>' +
+        '<span class="task-name">' + esc(task.name) + '</span></div>' +
+        (task.list ? '<span class="list-tag">' + esc(task.list) + '</span>' : '') +
+      '</td>' +
+      '<td><span class="date-val">' + fmtDate(task.dateCreated) + '</span></td>' +
+      '<td><span class="date-val' + (isOverdue ? ' overdue' : '') + '">' + fmtDate(task.dateDue) +
+        (isOverdue ? '<span class="overdue-pill">Vencida</span>' : '') + '</span></td>' +
+      '<td>' + (task.dateDone
+        ? '<span class="date-val done">' + fmtDate(task.dateDone) + '</span>'
+        : '<span class="no-val">—</span>') + '</td>' +
+      '<td>' + statusBadgeHtml(task) + '</td>' +
+      '<td style="text-align:center">' + sprint + '</td>' +
+      '<td>' + (task.assignee
+        ? '<span class="assignee-badge">' + esc(task.assignee) + '</span>'
+        : '<span class="no-val">—</span>') + '</td>' +
+      (showPuntos
+        ? '<td style="text-align:center">' + (task.puntos != null
+            ? '<span class="puntos-badge" style="--area-color:' + meta.color + '">⚡ ' + task.puntos + '</span>'
+            : '<span class="no-val">—</span>') + '</td>'
+        : '') +
+      '<td>' + entregable + '</td>' +
+    '</tr>';
+
+    if (isOpen) {
+      row += '' +
+      '<tr class="desc-row">' +
+        '<td colspan="' + colSpan + '" class="desc-cell">' +
+          '<div class="desc-box">' +
+            '<div class="desc-title">Descripción</div>' +
+            (task.description
+              ? '<p class="desc-text">' + esc(task.description) + '</p>'
+              : '<p class="desc-text empty">Sin descripción.</p>') +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }
+    return row;
+  }).join('');
+}
+
+function renderTable() {
+  var meta = metaFor(state.activeTab);
+  var tasks = state.session.tasks[state.activeTab] || [];
+  var showPuntos = state.activeTab === 'DISEÑO' || state.activeTab === 'AUDIOVISUAL';
+
+  if (!tasks.length) {
+    return '' +
+    '<div class="empty-state">' +
+      '<div class="empty-icon">' + meta.emoji + '</div>' +
+      '<p class="empty-text">No tienes tareas en el área de <strong>' + esc(state.activeTab) + '</strong></p>' +
+    '</div>';
+  }
+
+  var cols = [
+    { key: 'name',        label: 'Tarea' },
+    { key: 'dateCreated', label: 'Fecha solicitada' },
+    { key: 'dateDue',     label: 'Fecha de deadline' },
+    { key: 'dateDone',    label: 'Fecha de entrega' },
+    { key: 'status',      label: 'Estado en ClickUp' },
+    { key: 'sprint',      label: 'Sprint' },
+    { key: 'assignee',    label: 'Responsable' }
+  ];
+  if (showPuntos) cols.push({ key: 'puntos', label: 'Puntos' });
+  cols.push({ key: null, label: 'Entregable' });
+
+  var headHtml = cols.map(function (col) {
+    var icon = '';
+    if (col.key) {
+      var active = state.sortKey === col.key;
+      icon = '<span class="sort-icon' + (active ? ' active' : '') + '">' +
+        (active ? (state.sortDir === 'asc' ? '↑' : '↓') : '⇅') + '</span>';
+    }
+    return '<th' + (col.key ? ' class="sortable" data-action="sort" data-key="' + col.key + '"' : '') + '>' +
+      col.label + icon + '</th>';
+  }).join('');
+
+  return '' +
+  '<div class="top-scroll" id="top-scroll"><div id="top-phantom"></div></div>' +
+  '<div class="table-wrap" id="table-wrap" style="--area-color:' + meta.color + '">' +
+    '<table>' +
+      '<thead><tr>' + headHtml + '</tr></thead>' +
+      '<tbody>' + renderTaskRows(tasks, showPuntos) + '</tbody>' +
+    '</table>' +
+  '</div>';
+}
+
+function renderDashboard() {
+  var user = state.session.user || {};
+  var initial = (user.name || '?').charAt(0).toUpperCase();
+
+  return '' +
+  '<div class="dash-root">' +
+    '<header class="dash-header">' +
+      '<div class="dash-header-inner">' +
+        '<div class="brand">' + LOGO_SVG_SM +
+          '<div><div class="brand-name">Portal de solicitantes</div>' +
+          '<div class="brand-sub">Marketing Corp · Buk</div></div>' +
+        '</div>' +
+        '<div class="user-box">' +
+          '<div class="avatar">' + esc(initial) + '</div>' +
+          '<div><div class="user-name">' + esc(user.name || user.email || '') + '</div>' +
+          '<div class="user-email">' + esc(user.email || '') + '</div></div>' +
+          '<button type="button" class="logout-btn" data-action="logout" title="Cerrar sesión">' + LOGOUT_SVG + '</button>' +
+        '</div>' +
+      '</div>' +
+    '</header>' +
+
+    (state.error
+      ? '<div class="dash-error" role="alert"><span>' + esc(state.error) + '</span>' +
+        '<button type="button" data-action="refresh">Reintentar</button></div>'
+      : '') +
+
+    '<div class="summary-row">' + AREAS.map(renderSummaryCard).join('') + '</div>' +
+    '<div class="tab-bar" role="tablist">' + AREAS.map(renderTab).join('') + '</div>' +
+    '<div class="table-section">' + renderTable() + '</div>' +
+  '</div>';
+}
+
+// ── Render raíz ──────────────────────────────────────────────
+function render() {
+  var app = document.getElementById('app');
+  app.innerHTML = state.view === 'login' ? renderLogin() : renderDashboard();
+  bindScrollSync();
+}
+
+// ── Scroll sincronizado (deslizable superior ↔ tabla) ────────
+function bindScrollSync() {
+  var wrap = document.getElementById('table-wrap');
+  var top = document.getElementById('top-scroll');
+  var phantom = document.getElementById('top-phantom');
+  if (!wrap || !top || !phantom) return;
+
+  phantom.style.width = wrap.scrollWidth + 'px';
+  top.addEventListener('scroll', function () { wrap.scrollLeft = top.scrollLeft; });
+  wrap.addEventListener('scroll', function () { top.scrollLeft = wrap.scrollLeft; });
+}
+
+// ── Eventos (delegación) ─────────────────────────────────────
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-action]');
+  if (!el) return;
+  var action = el.getAttribute('data-action');
+
+  if (action === 'mode-email') { state.mode = 'email'; state.error = ''; render(); }
+  else if (action === 'mode-team') { state.mode = 'team'; state.error = ''; render(); }
+  else if (action === 'tab') { state.activeTab = el.getAttribute('data-area'); state.expanded = null; render(); }
+  else if (action === 'logout') { handleLogout(); }
+  else if (action === 'refresh') { refreshTasks(); }
+  else if (action === 'sort') {
+    var key = el.getAttribute('data-key');
+    if (state.sortKey === key) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    else { state.sortKey = key; state.sortDir = 'asc'; }
+    render();
+  }
+  else if (action === 'expand') {
+    // No expandir si el click fue en un link
+    if (e.target.closest('a')) return;
+    var id = el.getAttribute('data-id');
+    state.expanded = state.expanded === id ? null : id;
+    render();
+  }
+});
+
+document.addEventListener('input', function (e) {
+  var id = e.target.id;
+  if (id === 'f-email') {
+    state.email = e.target.value;
+    state.error = '';
+    updateEmailField();
+  } else if (id === 'f-country') {
+    state.country = e.target.value;
+    state.error = '';
+    updateSubmitButton();
+  } else if (id === 'f-team') {
+    state.team = e.target.value;
+    state.error = '';
+    updateSubmitButton();
+  }
+});
+
+// Actualiza solo el hint/borde del email y el botón, sin re-render completo
+// (re-renderizar destruye el input y pierde el foco a cada tecla).
+function updateEmailField() {
+  var input = document.getElementById('f-email');
+  if (!input) return;
+  var invalid = state.email && !isBukEmail(state.email);
+  input.classList.toggle('invalid', !!invalid);
+
+  var hint = document.getElementById('f-email-hint');
+  if (invalid && !hint) {
+    hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.id = 'f-email-hint';
+    hint.textContent = 'Solo se permiten correos @buk';
+    input.parentNode.appendChild(hint);
+  } else if (!invalid && hint) {
+    hint.parentNode.removeChild(hint);
+  }
+  clearErrorBanner();
+  updateSubmitButton();
+}
+
+function updateSubmitButton() {
+  var btn = document.getElementById('login-submit');
+  if (!btn) return;
+  var canSubmit = state.mode === 'email'
+    ? isBukEmail(state.email)
+    : (state.country && state.team);
+  btn.disabled = !canSubmit || state.loading;
+}
+
+function clearErrorBanner() {
+  var err = document.getElementById('login-error');
+  if (err) err.parentNode.removeChild(err);
+}
+
+document.addEventListener('submit', function (e) {
+  if (e.target.id === 'login-form') handleSubmit(e);
+});
+
+// ── Boot ─────────────────────────────────────────────────────
+render();
+</script>
